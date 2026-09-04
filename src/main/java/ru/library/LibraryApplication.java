@@ -1,4 +1,4 @@
-package main.java.ru.library;
+package ru.library;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
