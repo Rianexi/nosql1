@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+library:
+  kv:
+    mode: memory
+    key-prefix: /library
+    draft-ttl-seconds: 300
+    snapshot-file: ./data/kv-snapshot.json
+    restore-on-start: true
+  cache:
+    user-settings-ttl-seconds: 600
+    user-settings-max-size: 1000
+  demo-data: true
+
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+logging:
+  level:
+    ru.library: DEBUG
