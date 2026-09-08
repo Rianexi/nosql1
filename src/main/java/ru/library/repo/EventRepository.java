@@ -22,15 +22,11 @@ public class EventRepository {
 
     public List<Versioned<Event>> findAll() {
         return kv.store().getPrefix(keys.events()).stream()
-                .filter(e -> !e.key().endsWith("/views"))     // служебный подключ счётчика
+                .filter(e -> !e.key().endsWith("/views"))
                 .map(e -> new Versioned<>(kv.fromJson(e.value(), Event.class),
                         e.modRevision(), e.version(), e.leaseId()))
                 .toList();
     }
 
-    public boolean updateIfUnchanged(Event e, long expectedRevision) {
-        return kv.compareAndPut(keys.event(e.id()), expectedRevision, e);
-    }
-
-    public void delete(String id) { kv.deletePrefix(keys.event(id)); }  // удалит и /views
+    public void delete(String id) { kv.deletePrefix(keys.event(id)); }
 }

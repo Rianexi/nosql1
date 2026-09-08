@@ -7,7 +7,6 @@ import ru.library.service.EventService;
 import ru.library.web.dto.EventView;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/events")
@@ -25,18 +24,6 @@ public class EventController {
 
     @GetMapping("/{id}")
     public EventView open(@PathVariable String id) { return service.open(id); }
-
-    @PutMapping("/{id}")
-    public EventView update(@PathVariable String id,
-                            @RequestHeader("If-Match") long revision,
-                            @RequestBody Event e) {
-        return service.update(id, e, revision);
-    }
-
-    @GetMapping("/{id}/held")
-    public Map<String, Integer> held(@PathVariable String id) {
-        return Map.of("heldSeats", service.heldSeats(id));
-    }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
