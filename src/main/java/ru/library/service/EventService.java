@@ -9,6 +9,7 @@ import ru.library.model.EventStatus;
 import ru.library.repo.EventRepository;
 import ru.library.web.dto.EventView;
 import ru.library.exception.ConflictException;
+import ru.library.repo.DraftRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,10 +19,13 @@ public class EventService {
     private final EventRepository repo;
     private final ViewCounterService views;
 
-    public EventService(EventRepository repo, ViewCounterService views) {
-        this.repo = repo;
-        this.views = views;
+    private final DraftRepository drafts;
+
+    public EventService(EventRepository repo, ViewCounterService views, DraftRepository drafts) {
+        this.repo = repo; this.views = views; this.drafts = drafts;
     }
+
+    public int heldSeats(String eventId) { return drafts.heldSeats(eventId); }
 
     public EventView create(Event in) {
         if (in.totalSeats() <= 0) throw new ValidationException("totalSeats должно быть > 0");
