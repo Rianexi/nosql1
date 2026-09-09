@@ -86,11 +86,11 @@ public class OrderService {
         }
         throw new ConflictException("Не удалось оформить заказ из-за высокой конкуренции, повторите попытку");
     }
-    }
+}
 
-    public Optional<Order> find(String id)     { return orders.find(id); }
-    public List<Order> all()                   { return orders.findAll(); }
-    public List<Order> byEvent(String eventId) { return orders.findByEvent(eventId); }
-    public long conflicts()                    { return conflicts.get(); }
-    public void resetConflicts()               { conflicts.set(0); }
+public Optional<Order> find(String id)     { return orders.find(id); }
+public List<Order> all()                   { return orders.findAll(); }
+public List<Order> byEvent(String eventId) { return orders.findByEvent(eventId); }
+public long conflicts()                    { return conflicts.get(); }
+public void resetConflicts()               { conflicts.set(0); }
 }

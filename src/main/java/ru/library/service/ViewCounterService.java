@@ -7,6 +7,7 @@ import ru.library.kv.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class ViewCounterService {
@@ -14,6 +15,7 @@ public class ViewCounterService {
 
     private final KeyValueStore store;
     private final Keys keys;
+    private final AtomicLong retries = new AtomicLong();
 
     public ViewCounterService(KvTemplate kv, Keys keys) {
         this.store = kv.store();
@@ -42,6 +44,7 @@ public class ViewCounterService {
             }
             TxnResult r = store.txn(List.of(cmp), List.of(KvOp.put(key, Long.toString(next))), List.of());
             if (r.succeeded()) return next;
+            retries.incrementAndGet();
             backoff(attempt);
         }
         throw new ConflictException("Слишком высокая конкуренция за счётчик " + key);
@@ -51,4 +54,13 @@ public class ViewCounterService {
         try { Thread.sleep(ThreadLocalRandom.current().nextLong(0, 1L + Math.min(attempt, 10))); }
         catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
+
+    public long incrementNaive(String key) {
+        long next = getKey(key) + 1;
+        store.put(key, Long.toString(next));
+        return next;
+    }
+
+    public long retries()       { return retries.get(); }     // ← NEW
+    public void resetRetries()  { retries.set(0); }
 }
