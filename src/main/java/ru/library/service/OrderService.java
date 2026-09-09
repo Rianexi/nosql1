@@ -86,11 +86,47 @@ public class OrderService {
         }
         throw new ConflictException("Не удалось оформить заказ из-за высокой конкуренции, повторите попытку");
     }
-}
 
-public Optional<Order> find(String id)     { return orders.find(id); }
-public List<Order> all()                   { return orders.findAll(); }
-public List<Order> byEvent(String eventId) { return orders.findByEvent(eventId); }
-public long conflicts()                    { return conflicts.get(); }
-public void resetConflicts()               { conflicts.set(0); }
+    public Optional<Order> find(String id) {
+        return orders.find(id);
+    }
+
+    public List<Order> all() {
+        return orders.findAll();
+    }
+
+    public List<Order> byEvent(String eventId) {
+        return orders.findByEvent(eventId);
+    }
+
+    public Order cancel(String id) {
+        Order order = orders.find(id)
+                .orElseThrow(() -> new NotFoundException("Заказ не найден: " + id));
+        if (order.status() == OrderStatus.CANCELLED)
+            return order;
+
+        Versioned<Event> v = events.find(order.eventId())
+                .orElseThrow(() -> new NotFoundException("Событие не найдено: " + order.eventId()));
+        Event e = v.value();
+        Order cancelled = order.withStatus(OrderStatus.CANCELLED);
+        Event updated = e.withFreeSeats(e.freeSeats() + order.seats());
+
+        TxnResult r = kv.store().txn(
+                List.of(Compare.modRevision(keys.event(e.id()), Compare.Op.EQUAL, v.modRevision())),
+                List.of(
+                        KvOp.put(keys.event(e.id()), kv.toJson(updated)),
+                        KvOp.put(keys.order(id), kv.toJson(cancelled))),
+                List.of());
+        if (!r.succeeded())
+            throw new ConflictException("Не удалось отменить заказ из-за конфликта ревизий");
+        return cancelled;
+    }
+
+    public long conflicts() {
+        return conflicts.get();
+    }
+
+    public void resetConflicts() {
+        conflicts.set(0);
+    }
 }
