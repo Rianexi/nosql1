@@ -29,4 +29,8 @@ public class EventRepository {
     }
 
     public void delete(String id) { kv.deletePrefix(keys.event(id)); }
+
+    public boolean updateIfUnchanged(Event e, long expectedRevision) {
+        return kv.compareAndPut(keys.event(e.id()), expectedRevision, e);
+    }
 }

@@ -28,4 +28,11 @@ public class EventController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id) { service.delete(id); }
+
+    @PutMapping("/{id}")
+    public EventView update(@PathVariable String id,
+                            @RequestHeader("If-Match") long revision,
+                            @RequestBody Event e) {
+        return service.update(id, e, revision);
+    }
 }

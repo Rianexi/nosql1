@@ -8,6 +8,7 @@ import ru.library.model.Event;
 import ru.library.model.EventStatus;
 import ru.library.repo.EventRepository;
 import ru.library.web.dto.EventView;
+import ru.library.exception.ConflictException;
 
 import java.util.List;
 import java.util.UUID;
@@ -46,6 +47,23 @@ public class EventService {
         return repo.findAll().stream()
                 .map(v -> new EventView(v.value(), v.modRevision(), views.get(v.value().id())))
                 .toList();
+    }
+
+    public EventView update(String id, Event patch, long expectedRevision) {
+        Versioned<Event> cur = find(id);
+        Event c = cur.value();
+        int sold = c.totalSeats() - c.freeSeats();
+        if (patch.totalSeats() < sold)
+            throw new ValidationException("totalSeats меньше уже проданных мест (" + sold + ")");
+
+        Event upd = new Event(id, patch.title(), patch.type(), patch.dateTime(), patch.hall(),
+                patch.totalSeats(), patch.totalSeats() - sold, patch.price(),
+                patch.status() == null ? c.status() : patch.status(), patch.description());
+
+        if (!repo.updateIfUnchanged(upd, expectedRevision))
+            throw new ConflictException("Событие изменено параллельно (ваша ревизия " + expectedRevision
+                    + ", текущая " + cur.modRevision() + "). Обновите данные и повторите.");
+        return peek(id);
     }
 
     public void delete(String id) { repo.delete(id); }
